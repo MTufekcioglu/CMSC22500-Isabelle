@@ -1,0 +1,34 @@
+Inductive regex (X : Type) :=
+  | char (x : X) : regex X
+  | question (r : regex X) : regex X  (*   r? *)
+  | asterisk (r : regex X) : regex X
+  | concat (r s : regex X) : regex X  (* r s *)
+  | either (r s : regex X) : regex X  (* r + s *).
+
+Fixpoint accept (r : regex) (l : list X) : Prop :=
+  match r with
+  | char x => 
+      l = [x]
+  | question r => 
+      accept r l \/ l = []
+  | asterisk r =>
+      exists (k : nat), 
+      accept r (firstn k l) /\ accept (asterisk r) (skipn k l)
+  | concat r s =>
+      exists (k : nat),
+      accept r (firstn k l) /\ accept s (skipn k l)
+  | either r s =>
+      accept r l \/ accept s l
+  end.
+
+Fixpoint rev (r : regex) : regex :=
+  match r with
+  | char x => char x
+  | question r => question (rev r)
+  | asterisk r => asterisk (rev r)
+  | concat r s => concat (rev s) (rev r)
+  end.
+
+Lemma rev_correct {X : Type} (r : regex X) (l : list X) : 
+  accept (rev r) l <-> accept r (rev_list l).
+
