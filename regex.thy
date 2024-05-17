@@ -1,5 +1,5 @@
 theory regex
-  imports "Main"
+  imports "HOL.Main"
 begin
 
 datatype regex =
@@ -49,35 +49,18 @@ fun many_language :: "language \<Rightarrow> language" where
 fun rev_language :: "language \<Rightarrow> language" where
   "rev_language lang lst = lang (rev lst)"
 
-(*
-fun regex_language :: "regex \<Rightarrow> language" where
-  "regex_language reg = (case reg of 
-    Empty \<Rightarrow> empty_language |
-    Char n \<Rightarrow> char_language n | 
-    Optn r \<Rightarrow> optn_language (regex_language r) |
-    Many r \<Rightarrow> many_language (regex_language r) | 
-    Plus r s \<Rightarrow> plus_language (regex_language r) (regex_language s) | 
-    Concat r s \<Rightarrow> concat_language (regex_language r) (regex_language s))"
-*)
+
 
 fun regex_language :: "regex \<Rightarrow> language" where
     "regex_language Empty = (\<lambda> l. False)" |
     "regex_language Eps = (\<lambda> l. l = [])" |
     "regex_language (Char n) = (\<lambda> l. l = [n])" | 
     "regex_language (Many r) = many_language (regex_language r)" | 
-    "regex_language (Plus r s) = (\<lambda> l. (regex_language r l) \<or> (regex_language s l))" | 
-    "regex_language (Concat r s) = concat_language (regex_language r) (regex_language s)"
+    "regex_language (Plus r s) = 
+      (\<lambda> l. (regex_language r l) \<or> (regex_language s l))" | 
+    "regex_language (Concat r s) = 
+      concat_language (regex_language r) (regex_language s)"
 
-
-(*
-(case reg of 
-    Empty \<Rightarrow>  |
-    Char n \<Rightarrow>  | 
-    Optn r \<Rightarrow>  |
-    Many r \<Rightarrow>  | 
-    Plus r s \<Rightarrow>  | 
-    Concat r s \<Rightarrow> )
-*)
 
 fun Compl :: "regex \<Rightarrow> regex" where
   "Compl Empty = Empty" |
@@ -106,10 +89,6 @@ fun c :: "regex \<Rightarrow> regex" where
   "c (Many r) = Eps" |
   "c (Plus r s) = Plus (c r) (c s)" | 
   "c (Concat r s) = Concat (c s) (c r)"
-
-
-
-
 
 lemma Optn_correct : "regex_language (Optn r) l = optn_language (regex_language r) l"
   by simp
@@ -218,28 +197,64 @@ lemma many_helper_lst_nil :
   "many_language_helper lang prefix [] = (prefix = [] \<or> lang prefix)"
   by (simp)
 
-(*lemma many_helper_iff_ex_app : " 
-(lang (a # lst) \<or> (\<exists>l1 l2. lst = l1 @ l2 \<and> lang (a # l1) \<and> many_language_helper lang [] l2)) =
-    (lang (a # lst) \<or> (\<exists>l1 l2. a # lst = l1 @ l2 \<and> lang l1 \<and> many_language_helper lang [] l2))"
-  (*apply (rule HOL.arg_cong[of _ _ "\<lambda> x. (lang (a#lst) \<or> x)"])
-  apply (auto)
-   apply (rule_tac x="a#l1" in exI; simp)
-  apply (case_tac "l1")
 
-  apply (rule_tac s="l1" in subst)
-  
-apply (rule_tac x="l1" in exI)
-  apply (induct_tac l1)
-  apply (auto)
-  apply (erule ssubst)
-  apply (frule_tac allE[of _ "l2"])*)
-  sorry*)
-  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 lemma many_helper_prefix_Cons : 
   "many_language_helper lang prefix (x#xs) = 
     ((lang prefix \<and> many_language_helper lang [] (x#xs))
       \<or> many_language_helper lang (prefix @ [x])  xs)"
   by (case_tac prefix; auto)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 lemma many_language_of_lang : 
   "lang (prefix @ lst) \<Longrightarrow> many_language_helper lang prefix lst"
@@ -360,16 +375,6 @@ inductive many_ind_nonempty :: "language \<Rightarrow> language" where
   many_ne_prep : "lang prefix \<Longrightarrow> prefix \<noteq> [] \<Longrightarrow> many_ind_nonempty lang lst
   \<Longrightarrow> many_ind_nonempty lang (prefix@lst)" 
 
-
-
-(*
-lemma many_ind_nonempty.induct_fix_lang : 
-  "many_ind_nonempty lang lst \<Longrightarrow> 
-  (P []) \<Longrightarrow> 
-  (\<And>prefix lst'. lang prefix \<Longrightarrow> prefix \<noteq> [] 
-  \<Longrightarrow> many_ind_nonempty lang lst' \<Longrightarrow> P (prefix @ lst')) \<Longrightarrow> P lst"
-  apply (erule many_ind_nonempty.induct)
-*)
 
 lemma many_lang : "lang lst \<Longrightarrow> many_ind lang lst"
   apply (frule many_prep)
@@ -1104,8 +1109,5 @@ lemma pumping_strong : "\<forall> l. regex_language r l \<longrightarrow> pumpin
        apply (rule_tac x="s1@concat (replicate m s2)@s3" in exI;
         rule_tac x="l2" in exI)
       by simp
-
-
-
 
 end
